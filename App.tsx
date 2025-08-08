@@ -1,1 +1,281 @@
-import { useState, useEffect, useRef } from 'react'; import Head from 'next/head'; import { useRouter } from 'next/router'; import { motion, AnimatePresence, useScroll, useTransform, useSpring, useMotionValue } from 'framer-motion';  // ==================================================================================================== // Data Models and Mock UI Components // NOTE: I am keeping these mocks in for the immersive preview to work. // In your actual Next.js project, you should have these files in your components folder. // ====================================================================================================  const Button = ({ children, onClick, className, ...props }) => (   <button onClick={onClick} className={`px-4 py-2 rounded-lg text-white font-medium ${className}`} {...props}>     {children}   </button> ); const Card = ({ children, className }) => (   <div className={`rounded-lg border bg-card text-card-foreground shadow-sm ${className}`}>     {children}   </div> ); const CardContent = ({ children, className }) => (   <div className={`p-6 ${className}`}>{children}</div> ); const CardHeader = ({ children, className }) => (   <div className={`flex flex-col space-y-1.5 p-6 ${className}`}>{children}</div> ); const CardTitle = ({ children, className }) => (   <h3 className={`text-2xl font-semibold leading-none tracking-tight ${className}`}>{children}</h3> ); const CardDescription = ({ children, className }) => (   <p className={`text-sm text-muted-foreground ${className}`}>{children}</p> ); const Input = ({ className, ...props }) => (   <input className={`flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${className}`} {...props} /> ); const Textarea = ({ className, ...props }) => (   <textarea className={`flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${className}`} {...props} /> ); const Tabs = ({ children, activeTab }) => {   const [localActiveTab, setLocalActiveTab] = useState(activeTab);   const tabTriggers = React.Children.map(children, child => {     if (child.type.name === 'TabsList') {       return React.cloneElement(child, {         onTabClick: (value) => setLocalActiveTab(value),         activeTab: localActiveTab       });     }     return child;   });   return <div>{tabTriggers}</div>; }; const TabsList = ({ children, onTabClick, activeTab, className }) => (   <div className={className}>     {React.Children.map(children, child =>       React.cloneElement(child, { onClick: () => onTabClick(child.props.value), activeTab: activeTab })     )}   </div> ); const TabsTrigger = ({ children, onClick, activeTab, value, className }) => (   <button onClick={onClick} className={`${className} ${activeTab === value ? 'bg-blue-500 text-white' : 'bg-transparent text-gray-400'}`}>     {children}   </button> ); const TabsContent = ({ children, value, activeTab }) => value === activeTab ? <div>{children}</div> : null; const Slider = ({ value, onValueChange, min, max, step }) => (   <input type="range" min={min} max={max} step={step} value={value[0]} onChange={(e) => onValueChange([Number(e.target.value)])} /> );  // ==================================================================================================== // Consolidated Component Definitions // ====================================================================================================  const ImageWithFallback = ({ src, alt, className }) => (   <img src={src} alt={alt} className={className} onError={(e) => e.target.src = 'https://placehold.co/800x600'} /> );  const AnimatedNav = ({ isVisible }) => {   const [isMenuOpen, setIsMenuOpen] = useState(false);   const [currentLanguage, setCurrentLanguage] = useState('EN');   const navItems = [     { label: 'Properties', href: '#properties' },     { label: 'Locations', href: '#offices' },     { label: 'Services', href: '#services' },     { label: 'About', href: '#about' }   ];   const languages = ['EN', 'AR', 'UR', 'RU'];   const { scrollY } = useScroll();   const navBackground = useTransform(scrollY, [0, 100], ['rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, 0.8)']);    return (     <>       <motion.nav         className="fixed top-0 left-0 right-0 z-50 px-6 py-4"         initial={{ y: -100, opacity: 0 }}         animate={isVisible ? { y: 0, opacity: 1 } : { y: -100, opacity: 0 }}         transition={{ duration: 0.8 }}         style={{ background: navBackground }}       >         <div className="flex items-center justify-between">           <motion.div className="flex items-center space-x-3" initial={{ x: -50, opacity: 0 }} animate={isVisible ? { x: 0, opacity: 1 } : { x: -50, opacity: 0 }} transition={{ duration: 0.6, delay: 0.2 }}>             <motion.div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg" whileHover={{ scale: 1.05, rotate: 5 }} transition={{ type: "spring", stiffness: 300 }} data-cursor="hover">               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6 text-white"><path d="M18 22v-4"/><path d="M12 22v-4"/><path d="M6 22v-4"/><path d="M18 18V8"/><path d="M12 18V4"/><path d="M6 18v-8"/><path d="M4 22h16"/></svg>             </motion.div>             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}>               <div className="text-white font-bold text-xl">NOOD</div>               <div className="text-gray-300 text-xs tracking-wider">PROPERTIES</div>             </motion.div>           </motion.div>           <motion.div className="hidden md:flex items-center space-x-8" initial={{ opacity: 0 }} animate={isVisible ? { opacity: 1 } : { opacity: 0 }} transition={{ duration: 0.6, delay: 0.3 }}>             {navItems.map((item, index) => (               <motion.a key={item.label} href={item.href} className="text-gray-300 hover:text-white transition-colors relative group"                 initial={{ y: -20, opacity: 0 }}                 animate={isVisible ? { y: 0, opacity: 1 } : { y: -20, opacity: 0 }}                 transition={{ duration: 0.5, delay: 0.3 + index * 0.1 }}                 whileHover={{ y: -2 }}                 data-cursor="hover">                 {item.label}                 <motion.div className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-500 to-purple-600 group-hover:w-full" transition={{ duration: 0.3 }} />               </motion.a>             ))}             <motion.div className="flex items-center space-x-2 ml-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }}>               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-gray-300"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 0 4 10 15.3 15.3 0 0 0-4 10 15.3 15.3 0 0 0-4-10 15.3 15.3 0 0 0 4-10z"/><path d="M2 12h20"/></svg>               <select className="bg-transparent text-gray-300 border-none outline-none cursor-pointer" value={currentLanguage} onChange={(e) => setCurrentLanguage(e.target.value)} data-cursor="hover">                 {languages.map(lang => (<option key={lang} value={lang} className="bg-gray-900">{lang}</option>))}               </select>             </motion.div>           </motion.div>           <motion.button className="md:hidden text-white" onClick={() => setIsMenuOpen(!isMenuOpen)} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} whileTap={{ scale: 0.9 }} data-cursor="hover">             {isMenuOpen ? <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6"><path d="M18 6 6 18M6 6l12 12"/></svg> : <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>}           </motion.button>         </div>       </motion.nav>       <AnimatePresence>         {isMenuOpen && (           <motion.div className="fixed inset-0 z-40 bg-black/95 backdrop-blur-lg flex flex-col" initial={{ opacity: 0, y: -50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -50 }} transition={{ duration: 0.3 }}>             <div className="flex flex-col items-center justify-center h-full space-y-8">               {navItems.map((item, index) => (                 <motion.a key={item.label} href={item.href} className="text-white text-3xl font-medium" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 * index }} onClick={() => setIsMenuOpen(false)} data-cursor="hover">                   {item.label}                 </motion.a>               ))}               <motion.div className="flex items-center space-x-4 mt-12" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}>                 {languages.map((lang, index) => (                   <motion.button key={lang} className={`px-4 py-2 rounded-full ${currentLanguage === lang ? 'bg-blue-600 text-white' : 'text-gray-400'}`} onClick={() => setCurrentLanguage(lang)} whileHover={{ scale: 1.1 }} data-cursor="hover">                     {lang}                   </motion.button>                 ))}               </motion.div>               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}>                 <Button className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 border-0 text-white px-8 py-6 text-xl mt-8" onClick={() => setIsMenuOpen(false)} data-cursor="hover">                   Contact Us                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 ml-2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>                 </Button>               </motion.div>             </div>           </motion.div>         )}       </AnimatePresence>     </>   ); };  // ... other consolidated components like Preloader, Cursor, etc. // The code would continue here with all the other components. // For brevity, I'm providing a truncated version to show the structure.  // ==================================================================================================== // Main Application Component // ====================================================================================================  export default function App({ Component, pageProps }) {   const [isLoading, setIsLoading] = useState(true);    const handlePreloaderComplete = () => {     setIsLoading(false);   };    return (     <>       {/* Global styles */}       <style>{`         @layer base {           :root {             --background: 0 0 0; --foreground: 0 0 100; --card: 0 0 8; --card-foreground: 0 0 100; --popover: 0 0 8; --popover-foreground: 0 0 100; --primary: 0 0 100; --primary-foreground: 0 0 0; --secondary: 0 0 20; --secondary-foreground: 0 0 100; --muted: 0 0 40; --muted-foreground: 0 0 70; --accent: 0 0 85; --accent-foreground: 0 0 0; --destructive: 0 0 30; --destructive-foreground: 0 0 100; --border: 0 0 15; --input: 0 0 10; --ring: 0 0 60; --metallic-light: 0 0 85; --metallic-medium: 0 0 50; --metallic-dark: 0 0 25; --chrome: 0 0 95; --steel: 0 0 35; --radius: 0.75rem; --gradient-primary: linear-gradient(135deg, hsl(0 0 0), hsl(0 0 20)); --gradient-hero: linear-gradient(135deg, hsl(0 0 0 / 0.95), hsl(0 0 15 / 0.9)); --gradient-metallic: linear-gradient(135deg, hsl(0 0 25), hsl(0 0 50), hsl(0 0 85)); --gradient-chrome: linear-gradient(135deg, hsl(0 0 95), hsl(0 0 85), hsl(0 0 75)); --gradient-steel: linear-gradient(135deg, hsl(0 0 15), hsl(0 0 35), hsl(0 0 55)); --gradient-carbon: linear-gradient(135deg, hsl(0 0 5), hsl(0 0 15), hsl(0 0 25)); --shadow-luxury: 0 25px 50px -12px hsl(0 0 0 / 0.8); --shadow-glow: 0 0 80px hsl(0 0 100 / 0.3); --shadow-elegant: 0 20px 40px -15px hsl(0 0 0 / 0.7); --shadow-metallic: 0 15px 35px -10px hsl(0 0 50 / 0.4); --shadow-chrome: 0 10px 30px -5px hsl(0 0 85 / 0.6); --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); --transition-luxury: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); --transition-metallic: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94); --primary-glow: 0 0 90; --secondary-glow: 0 0 60; --highlight: 0 0 100; --dim: 0 0 30; --sidebar-background: 0 0 98; --sidebar-foreground: 0 0 10; --sidebar-primary: 0 0 0; --sidebar-primary-foreground: 0 0 100; --sidebar-accent: 0 0 95; --sidebar-accent-foreground: 0 0 10; --sidebar-border: 0 0 85; --sidebar-ring: 0 0 60; }           .dark { --background: 222.2 84% 4.9%; --foreground: 210 40% 98%; --card: 222.2 84% 4.9%; --card-foreground: 210 40% 98%; --popover: 222.2 84% 4.9%; --popover-foreground: 210 40% 98%; --primary: 210 40% 98%; --primary-foreground: 222.2 47.4% 11.2%; --secondary: 217.2 32.6% 17.5%; --secondary-foreground: 210 40% 98%; --muted: 217.2 32.6% 17.5%; --muted-foreground: 215 20.2% 65.1%; --accent: 217.2 32.6% 17.5%; --accent-foreground: 210 40% 98%; --destructive: 0 62.8% 30.6%; --destructive-foreground: 210 40% 98%; --border: 217.2 32.6% 17.5%; --input: 217.2 32.6% 17.5%; --ring: 212.7 26.8% 83.9%; --sidebar-background: 240 5.9% 10%; --sidebar-foreground: 240 4.8% 95.9%; --sidebar-primary: 224.3 76.3% 48%; --sidebar-primary-foreground: 0 0% 100%; --sidebar-accent: 240 3.7% 15.9%; --sidebar-accent-foreground: 240 4.8% 95.9%; --sidebar-border: 240 3.7% 15.9%; --sidebar-ring: 217.2 91.2% 59.8%; }           * { @apply border-border; }           body { @apply bg-background text-foreground; font-family: 'Inter', sans-serif; overflow-x: hidden; }           ::-webkit-scrollbar { width: 8px; }           ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.1); }           ::-webkit-scrollbar-thumb { background: linear-gradient(135deg, #3b82f6, #8b5cf6); border-radius: 10px; }           ::-webkit-scrollbar-thumb:hover { background: linear-gradient(135deg, #2563eb, #7c3aed); }           html, body, * { cursor: none !important; }           input, textarea, [contenteditable] { cursor: text !important; }           @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-20px); } }           @keyframes glow { 0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.5); } 50% { box-shadow: 0 0 40px rgba(147, 51, 234, 0.8); } }           @keyframes shimmer { 0% { background-position: -200px 0; } 100% { background-position: calc(200px + 100%) 0; } }           .animate-float { animation: float 6s ease-in-out infinite; }           .animate-glow { animation: glow 2s ease-in-out infinite alternate; }           .animate-shimmer { background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent); background-size: 200px 100%; animation: shimmer 2s infinite; }           * { transition: transform 0.3s ease, opacity 0.3s ease, filter 0.3s ease; }         }       `}</style>        {/* Renders the Preloader and then the main content */}       {isLoading && <EnhancedPreloader onComplete={handlePreloaderComplete} />}       {!isLoading && (         <>           <EnhancedCursor />           <Component {...pageProps} />         </>       )}     </>   ); }  // ==================================================================================================== // Individual Pages // The compiler error was here: you had multiple definitions of these components. // I've removed the duplicates. // ====================================================================================================  const HomePage = () => {   const [uiVisible, setUiVisible] = useState(false);   useEffect(() => {     const timer = setTimeout(() => {       setUiVisible(true);     }, 500);     return () => clearTimeout(timer);   }, []);   return (     <>       <Head><title>NOOD International Properties | Luxury Real Estate</title></Head>       <ParallaxVideoBackground />       <AnimatedNav isVisible={uiVisible} />       <main>         <HeroSection isVisible={uiVisible} />         <FeaturedProperties />         <DestinationsSection />         <ServicesSection />         <OfficeLocations />         <AIToolsSection />         <ContactSection />       </main>       <FloatingTools />       <Footer />     </>   ); };  const CountryPage = () => {   const router = useRouter();   const { country } = router.query;   const [uiVisible, setUiVisible] = useState(false);   const COUNTRIES = {     uae: { name: 'United Arab Emirates', videoSrc: 'https://images.unsplash.com/photo-1582672060674-bc2bd808a8f5', currency: 'AED', language: 'ar' },     uk: { name: 'United Kingdom', videoSrc: 'https://images.unsplash.com/photo-1486299267070-83823f5448dd', currency: 'GBP', language: 'en' },     russia: { name: 'Russia', videoSrc: 'https://images.unsplash.com/photo-1513326738677-b964603b136d', currency: 'RUB', language: 'ru' }   };   const countryData = COUNTRIES[country] || COUNTRIES.uae;   useEffect(() => {     const timer = setTimeout(() => setUiVisible(true), 500);     return () => clearTimeout(timer);   }, []);   if (!country) return null;   return (     <>       <Head><title>NOOD Properties | {countryData.name}</title></Head>       <AnimatedNav isVisible={uiVisible} />       <main>         <CountryHero country={countryData.name} videoSrc={countryData.videoSrc} isVisible={uiVisible} />         <CountryInfo country={country} />         <FeaturedProperties country={country} />         <AIToolsSection />       </main>       <FloatingTools />       <Footer />     </>   ); }; 
+import React, { useEffect, useRef, useState } from 'react';
+import Head from 'next/head';
+import { useRouter } from 'next/router';
+import { motion, AnimatePresence, useScroll, useTransform, useSpring, useMotionValue } from 'framer-motion';
+
+// ====================================================================================================
+// Mock Libraries for Self-Contained Code
+// ====================================================================================================
+
+// Mock for 'next/head'
+const Head = ({ children }) => <>{children}</>;
+
+// Mock for 'next/router'
+const useRouter = () => ({
+  pathname: '/',
+  query: { country: 'uae' },
+  push: (path) => console.log(`Navigating to ${path}`),
+});
+
+// Mock UI Components with TypeScript types
+interface ButtonProps {
+  children: React.ReactNode;
+  onClick?: () => void;
+  className?: string;
+  props?: any;
+}
+
+const Button = ({ children, onClick, className, ...props }: ButtonProps) => (
+  <button onClick={onClick} className={`px-4 py-2 rounded-lg text-white font-medium ${className}`} {...props}>
+    {children}
+  </button>
+);
+
+interface CardProps {
+  children: React.ReactNode;
+  className?: string;
+}
+
+const Card = ({ children, className }: CardProps) => (
+  <div className={`rounded-lg border bg-card text-card-foreground shadow-sm ${className}`}>
+    {children}
+  </div>
+);
+
+interface CardContentProps {
+  children: React.ReactNode;
+  className?: string;
+}
+
+const CardContent = ({ children, className }: CardContentProps) => (
+  <div className={`p-6 ${className}`}>{children}</div>
+);
+
+interface CardHeaderProps {
+  children: React.ReactNode;
+  className?: string;
+}
+
+const CardHeader = ({ children, className }: CardHeaderProps) => (
+  <div className={`flex flex-col space-y-1.5 p-6 ${className}`}>{children}</div>
+);
+
+interface CardTitleProps {
+  children: React.ReactNode;
+  className?: string;
+}
+
+const CardTitle = ({ children, className }: CardTitleProps) => (
+  <h3 className={`text-2xl font-semibold leading-none tracking-tight ${className}`}>{children}</h3>
+);
+
+interface CardDescriptionProps {
+  children: React.ReactNode;
+  className?: string;
+}
+
+const CardDescription = ({ children, className }: CardDescriptionProps) => (
+  <p className={`text-sm text-muted-foreground ${className}`}>{children}</p>
+);
+
+interface InputProps {
+  className?: string;
+  props?: any;
+}
+
+const Input = ({ className, ...props }: InputProps) => (
+  <input className={`flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${className}`} {...props} />
+);
+
+interface TextareaProps {
+  className?: string;
+  props?: any;
+}
+
+const Textarea = ({ className, ...props }: TextareaProps) => (
+  <textarea className={`flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${className}`} {...props} />
+);
+
+interface TabsProps {
+  children: React.ReactNode;
+  activeTab: string;
+}
+
+const Tabs = ({ children, activeTab }: TabsProps) => {
+  const [localActiveTab, setLocalActiveTab] = useState(activeTab);
+  const tabTriggers = React.Children.map(children, child => {
+    if (child.type.name === 'TabsList') {
+      return React.cloneElement(child, {
+        onTabClick: (value: string) => setLocalActiveTab(value),
+        activeTab: localActiveTab
+      });
+    }
+    return child;
+  });
+  return <div>{tabTriggers}</div>;
+};
+
+interface TabsListProps {
+  children: React.ReactNode;
+  onTabClick: (value: string) => void;
+  activeTab: string;
+  className?: string;
+}
+
+const TabsList = ({ children, onTabClick, activeTab, className }: TabsListProps) => (
+  <div className={className}>
+    {React.Children.map(children, child =>
+      React.cloneElement(child, { onClick: () => onTabClick(child.props.value), activeTab: activeTab })
+    )}
+  </div>
+);
+
+interface TabsTriggerProps {
+  children: React.ReactNode;
+  onClick: () => void;
+  activeTab: string;
+  value: string;
+  className?: string;
+}
+
+const TabsTrigger = ({ children, onClick, activeTab, value, className }: TabsTriggerProps) => (
+  <button onClick={onClick} className={`${className} ${activeTab === value ? 'bg-blue-500 text-white' : 'bg-transparent text-gray-400'}`}>
+    {children}
+  </button>
+);
+
+interface TabsContentProps {
+  children: React.ReactNode;
+  value: string;
+  activeTab: string;
+}
+
+const TabsContent = ({ children, value, activeTab }: TabsContentProps) => value === activeTab ? <div>{children}</div> : null;
+
+interface SliderProps {
+  value: number[];
+  onValueChange: (value: number[]) => void;
+  min: number;
+  max: number;
+  step: number;
+}
+
+const Slider = ({ value, onValueChange, min, max, step }: SliderProps) => (
+  <input type="range" min={min} max={max} step={step} value={value[0]} onChange={(e) => onValueChange([Number(e.target.value)])} />
+);
+
+// ====================================================================================================
+// Consolidated Component Definitions
+// ====================================================================================================
+
+interface ImageWithFallbackProps {
+  src: string;
+  alt: string;
+  className?: string;
+}
+
+const ImageWithFallback = ({ src, alt, className }: ImageWithFallbackProps) => (
+  <img src={src} alt={alt} className={className} onError={(e: any) => e.target.src = 'https://placehold.co/800x600'} />
+);
+
+interface AnimatedNavProps {
+  isVisible: boolean;
+}
+
+const AnimatedNav = ({ isVisible }: AnimatedNavProps) => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [currentLanguage, setCurrentLanguage] = useState('EN');
+  const navItems = [
+    { label: 'Properties', href: '#properties' },
+    { label: 'Locations', href: '#offices' },
+    { label: 'Services', href: '#services' },
+    { label: 'About', href: '#about' }
+  ];
+  const languages = ['EN', 'AR', 'UR', 'RU'];
+  const { scrollY } = useScroll();
+  const navBackground = useTransform(scrollY, [0, 100], ['rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, 0.8)']);
+
+  useEffect(() => {
+    if (isMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isMenuOpen]);
+
+  return (
+    <>
+      <motion.nav
+        className="fixed top-0 left-0 right-0 z-50 px-6 py-4"
+        initial={{ y: -100, opacity: 0 }}
+        animate={isVisible ? { y: 0, opacity: 1 } : { y: -100, opacity: 0 }}
+        transition={{ duration: 0.8 }}
+        style={{ background: navBackground }}
+      >
+        <div className="flex items-center justify-between">
+          <motion.div className="flex items-center space-x-3" initial={{ x: -50, opacity: 0 }} animate={isVisible ? { x: 0, opacity: 1 } : { x: -50, opacity: 0 }} transition={{ duration: 0.6, delay: 0.2 }}>
+            <motion.div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg" whileHover={{ scale: 1.05, rotate: 5 }} transition={{ type: "spring", stiffness: 300 }} data-cursor="hover">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6 text-white"><path d="M18 22v-4"/><path d="M12 22v-4"/><path d="M6 22v-4"/><path d="M18 18V8"/><path d="M12 18V4"/><path d="M6 18v-8"/><path d="M4 22h16"/></svg>
+            </motion.div>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}>
+              <div className="text-white font-bold text-xl">NOOD</div>
+              <div className="text-gray-300 text-xs tracking-wider">PROPERTIES</div>
+            </motion.div>
+          </motion.div>
+          <motion.div className="hidden md:flex items-center space-x-8" initial={{ opacity: 0 }} animate={isVisible ? { opacity: 1 } : { opacity: 0 }} transition={{ duration: 0.6, delay: 0.3 }}>
+            {navItems.map((item, index) => (
+              <motion.a key={item.label} href={item.href} className="text-gray-300 hover:text-white transition-colors relative group"
+                initial={{ y: -20, opacity: 0 }}
+                animate={isVisible ? { y: 0, opacity: 1 } : { y: -20, opacity: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 + index * 0.1 }}
+                whileHover={{ y: -2 }}
+                data-cursor="hover">
+                {item.label}
+                <motion.div className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-500 to-purple-600 group-hover:w-full" transition={{ duration: 0.3 }} />
+              </motion.a>
+            ))}
+            <motion.div className="flex items-center space-x-2 ml-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-gray-300"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 0 4 10 15.3 15.3 0 0 0-4 10 15.3 15.3 0 0 0-4-10 15.3 15.3 0 0 0 4-10z"/><path d="M2 12h20"/></svg>
+              <select className="bg-transparent text-gray-300 border-none outline-none cursor-pointer" value={currentLanguage} onChange={(e) => setCurrentLanguage(e.target.value)} data-cursor="hover">
+                {languages.map(lang => (<option key={lang} value={lang} className="bg-gray-900">{lang}</option>))}
+              </select>
+            </motion.div>
+          </motion.div>
+          <motion.button className="md:hidden text-white" onClick={() => setIsMenuOpen(!isMenuOpen)} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} whileTap={{ scale: 0.9 }} data-cursor="hover">
+            {isMenuOpen ? <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6"><path d="M18 6 6 18M6 6l12 12"/></svg> : <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>}
+          </motion.button>
+        </div>
+      </motion.nav>
+      <AnimatePresence>
+        {isMenuOpen && (
+          <motion.div className="fixed inset-0 z-40 bg-black/95 backdrop-blur-lg flex flex-col" initial={{ opacity: 0, y: -50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -50 }} transition={{ duration: 0.3 }}>
+            <div className="flex flex-col items-center justify-center h-full space-y-8">
+              {navItems.map((item, index) => (
+                <motion.a key={item.label} href={item.href} className="text-white text-3xl font-medium" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 * index }} onClick={() => setIsMenuOpen(false)} data-cursor="hover">
+                  {item.label}
+                </motion.a>
+              ))}
+              <motion.div className="flex items-center space-x-4 mt-12" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}>
+                {languages.map((lang, index) => (
+                  <motion.button key={lang} className={`px-4 py-2 rounded-full ${currentLanguage === lang ? 'bg-blue-600 text-white' : 'text-gray-400'}`} onClick={() => setCurrentLanguage(lang)} whileHover={{ scale: 1.1 }} data-cursor="hover">
+                    {lang}
+                  </motion.button>
+                ))}
+              </motion.div>
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}>
+                <Button className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 border-0 text-white px-8 py-6 text-xl mt-8" onClick={() => setIsMenuOpen(false)} data-cursor="hover">
+                  Contact Us
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 ml-2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </Button>
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+};
