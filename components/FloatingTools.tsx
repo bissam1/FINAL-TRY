@@ -1,217 +1,402 @@
-import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Calculator, PiggyBank, Passport, RefreshCw, X } from 'lucide-react'
-import { Card, CardContent } from './ui/card'
-import { Button } from './ui/button'
-import { Input } from './ui/input'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
+import { motion, AnimatePresence } from "framer-motion";
+import { useState } from "react";
+import { Calculator, DollarSign, Home, Building, X, TrendingUp, PieChart } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-export default function FloatingTools() {
-  const [isOpen, setIsOpen] = useState(false)
-  const [activeTool, setActiveTool] = useState<string | null>(null)
-
-  const toggleTool = (tool: string) => {
-    if (activeTool === tool) {
-      setActiveTool(null)
-    } else {
-      setActiveTool(tool)
-      setIsOpen(true)
-    }
-  }
-
-  return (
-    <div className="fixed bottom-8 right-8 z-40 flex flex-col items-end">
-      <AnimatePresence>
-        {isOpen && activeTool && (
-          <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.9 }}
-            className="mb-4 w-full sm:w-96"
-          >
-            <Card className="bg-black/80 backdrop-blur-lg border-gray-800 shadow-2xl">
-              <div className="flex items-center justify-between border-b border-gray-800 p-4">
-                <h3 className="font-semibold text-white">
-                  {activeTool === 'mortgage' && 'Mortgage Calculator'}
-                  {activeTool === 'roi' && 'ROI Calculator'}
-                  {activeTool === 'visa' && 'Visa Information'}
-                  {activeTool === 'currency' && 'Currency Converter'}
-                </h3>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={() => setIsOpen(false)}
-                  className="text-gray-400 hover:text-white"
-                >
-                  <X className="w-5 h-5" />
-                </Button>
-              </div>
-              <CardContent className="p-6">
-                {activeTool === 'mortgage' && <MortgageCalculator />}
-                {activeTool === 'roi' && <ROICalculator />}
-                {activeTool === 'visa' && <VisaInformation />}
-                {activeTool === 'currency' && <CurrencyConverter />}
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <div className="flex items-center space-x-3">
-        <motion.div
-          className="flex space-x-2"
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.5 }}
-        >
-          <Button
-            variant={activeTool === 'mortgage' ? 'default' : 'outline'}
-            size="icon"
-            onClick={() => toggleTool('mortgage')}
-            className={`rounded-full ${activeTool === 'mortgage' ? 'bg-blue-500 text-white' : 'bg-black/50 backdrop-blur-md border-gray-700 text-gray-300'}`}
-          >
-            <Calculator className="w-5 h-5" />
-          </Button>
-          <Button
-            variant={activeTool === 'roi' ? 'default' : 'outline'}
-            size="icon"
-            onClick={() => toggleTool('roi')}
-            className={`rounded-full ${activeTool === 'roi' ? 'bg-blue-500 text-white' : 'bg-black/50 backdrop-blur-md border-gray-700 text-gray-300'}`}
-          >
-            <PiggyBank className="w-5 h-5" />
-          </Button>
-          <Button
-            variant={activeTool === 'visa' ? 'default' : 'outline'}
-            size="icon"
-            onClick={() => toggleTool('visa')}
-            className={`rounded-full ${activeTool === 'visa' ? 'bg-blue-500 text-white' : 'bg-black/50 backdrop-blur-md border-gray-700 text-gray-300'}`}
-          >
-            <Passport className="w-5 h-5" />
-          </Button>
-          <Button
-            variant={activeTool === 'currency' ? 'default' : 'outline'}
-            size="icon"
-            onClick={() => toggleTool('currency')}
-            className={`rounded-full ${activeTool === 'currency' ? 'bg-blue-500 text-white' : 'bg-black/50 backdrop-blur-md border-gray-700 text-gray-300'}`}
-          >
-            <RefreshCw className="w-5 h-5" />
-          </Button>
-        </motion.div>
-      </div>
-    </div>
-  )
+interface FloatingToolsProps {
+  isOpen: boolean;
+  onClose: () => void;
 }
 
-// Mortgage Calculator Component
-function MortgageCalculator() {
-  const [propertyPrice, setPropertyPrice] = useState('1000000')
-  const [downPayment, setDownPayment] = useState('20')
-  const [interestRate, setInterestRate] = useState('3.5')
-  const [loanTerm, setLoanTerm] = useState('25')
-  
-  // Calculate mortgage payment
+const FloatingTools = ({ isOpen, onClose }: FloatingToolsProps) => {
+  const [activeTab, setActiveTab] = useState("mortgage");
+  const [mortgageData, setMortgageData] = useState({
+    price: 500000,
+    downPayment: 20,
+    interestRate: 3.5,
+    loanTerm: 30
+  });
+  const [roiData, setROIData] = useState({
+    investment: 500000,
+    annualRent: 60000,
+    appreciation: 5,
+    expenses: 15000
+  });
+  const [currency, setCurrency] = useState("AED");
+
   const calculateMortgage = () => {
-    const price = parseFloat(propertyPrice)
-    const down = parseFloat(downPayment) / 100
-    const interest = parseFloat(interestRate) / 100 / 12
-    const term = parseFloat(loanTerm) * 12
+    const principal = mortgageData.price * (1 - mortgageData.downPayment / 100);
+    const monthlyRate = mortgageData.interestRate / 100 / 12;
+    const numPayments = mortgageData.loanTerm * 12;
     
-    const loanAmount = price * (1 - down)
-    const monthlyPayment = (loanAmount * interest * Math.pow(1 + interest, term)) / (Math.pow(1 + interest, term) - 1)
-    
-    return isNaN(monthlyPayment) ? 0 : monthlyPayment.toFixed(2)
-  }
-
-  return (
-    <div className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-300 mb-1">
-          Property Price (USD)
-        </label>
-        <Input 
-          type="number" 
-          value={propertyPrice} 
-          onChange={(e) => setPropertyPrice(e.target.value)}
-          className="bg-gray-900 border-gray-700"
-        />
-      </div>
-      
-      <div>
-        <label className="block text-sm font-medium text-gray-300 mb-1">
-          Down Payment (%)
-        </label>
-        <Input 
-          type="number" 
-          value={downPayment} 
-          onChange={(e) => setDownPayment(e.target.value)}
-          className="bg-gray-900 border-gray-700"
-        />
-      </div>
-      
-      <div>
-        <label className="block text-sm font-medium text-gray-300 mb-1">
-          Interest Rate (%)
-        </label>
-        <Input 
-          type="number" 
-          step="0.1"
-          value={interestRate} 
-          onChange={(e) => setInterestRate(e.target.value)}
-          className="bg-gray-900 border-gray-700"
-        />
-      </div>
-      
-      <div>
-        <label className="block text-sm font-medium text-gray-300 mb-1">
-          Loan Term (years)
-        </label>
-        <Input 
-          type="number" 
-          value={loanTerm} 
-          onChange={(e) => setLoanTerm(e.target.value)}
-          className="bg-gray-900 border-gray-700"
-        />
-      </div>
-      
-      <div className="pt-4 border-t border-gray-800">
-        <div className="flex justify-between items-center">
-          <span className="text-gray-300">Monthly Payment:</span>
-          <span className="text-xl font-bold text-blue-400">${calculateMortgage()}</span>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ROI Calculator Component
-function ROICalculator() {
-  const [purchasePrice, setPurchasePrice] = useState('1000000')
-  const [annualRental, setAnnualRental] = useState('60000')
-  const [expenses, setExpenses] = useState('12000')
-  const [appreciation, setAppreciation] = useState('5')
-  
-  // Calculate ROI
-  const calculateROI = () => {
-    const price = parseFloat(purchasePrice)
-    const rental = parseFloat(annualRental)
-    const expense = parseFloat(expenses)
-    const appreciationRate = parseFloat(appreciation) / 100
-    
-    const annualCashFlow = rental - expense
-    const cashROI = (annualCashFlow / price) * 100
-    const totalROI = cashROI + appreciationRate * 100
+    const monthlyPayment = principal * (monthlyRate * Math.pow(1 + monthlyRate, numPayments)) / 
+                          (Math.pow(1 + monthlyRate, numPayments) - 1);
     
     return {
-      cashFlow: isNaN(annualCashFlow) ? 0 : annualCashFlow.toFixed(2),
-      cashROI: isNaN(cashROI) ? 0 : cashROI.toFixed(2),
-      totalROI: isNaN(totalROI) ? 0 : totalROI.toFixed(2)
-    }
-  }
+      monthlyPayment: monthlyPayment.toFixed(2),
+      totalPayment: (monthlyPayment * numPayments).toFixed(2),
+      totalInterest: (monthlyPayment * numPayments - principal).toFixed(2),
+      downPaymentAmount: (mortgageData.price * mortgageData.downPayment / 100).toFixed(2)
+    };
+  };
 
-  const results = calculateROI()
+  const calculateROI = () => {
+    const netRent = roiData.annualRent - roiData.expenses;
+    const appreciation = roiData.investment * (roiData.appreciation / 100);
+    const totalReturn = netRent + appreciation;
+    const roi = (totalReturn / roiData.investment) * 100;
+    
+    return {
+      netRent: netRent.toFixed(2),
+      appreciation: appreciation.toFixed(2),
+      totalReturn: totalReturn.toFixed(2),
+      roi: roi.toFixed(2)
+    };
+  };
+
+  const mortgageResults = calculateMortgage();
+  const roiResults = calculateROI();
+
+  const currencySymbols: Record<string, string> = {
+    AED: "د.إ",
+    USD: "$",
+    GBP: "£",
+    EUR: "€",
+    PKR: "₨",
+    RUB: "₽"
+  };
+
+  const formatCurrency = (amount: string | number) => {
+    return `${currencySymbols[currency]} ${Number(amount).toLocaleString()}`;
+  };
 
   return (
-    <div className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-300 mb-1">
-          Purchase Price (USD
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={onClose}
+        >
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0, y: 50 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.8, opacity: 0, y: 50 }}
+            transition={{ duration: 0.4, ease: [0.76, 0, 0.24, 1] }}
+            className="glass max-w-4xl w-full max-h-[90vh] overflow-y-auto rounded-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="glass-subtle border-b border-white/10 p-6 flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <Calculator className="w-6 h-6 text-primary" />
+                <h2 className="text-2xl font-playfair font-semibold text-luxury">Investment Tools</h2>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onClose}
+                className="magnetic text-muted-foreground hover:text-foreground"
+              >
+                <X size={20} />
+              </Button>
+            </div>
+
+            {/* Currency Selector */}
+            <div className="p-6 border-b border-white/10">
+              <div className="flex items-center space-x-4">
+                <Label className="text-sm font-medium">Currency:</Label>
+                <Select value={currency} onValueChange={setCurrency}>
+                  <SelectTrigger className="w-32 glass-subtle border-white/20">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="glass border-white/20 z-[99999]">
+                    <SelectItem value="AED">🇦🇪 AED</SelectItem>
+                    <SelectItem value="USD">🇺🇸 USD</SelectItem>
+                    <SelectItem value="GBP">🇬🇧 GBP</SelectItem>
+                    <SelectItem value="EUR">🇪🇺 EUR</SelectItem>
+                    <SelectItem value="PKR">🇵🇰 PKR</SelectItem>
+                    <SelectItem value="RUB">🇷🇺 RUB</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Tab Navigation */}
+            <div className="p-6 border-b border-white/10">
+              <div className="flex space-x-1 bg-muted/20 rounded-lg p-1">
+                <button
+                  onClick={() => setActiveTab("mortgage")}
+                  className={`magnetic flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-md transition-all duration-300 ${
+                    activeTab === "mortgage" 
+                      ? "bg-primary/20 text-primary shadow-gold" 
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Home size={18} />
+                  <span className="font-medium">Mortgage Calculator</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab("roi")}
+                  className={`magnetic flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-md transition-all duration-300 ${
+                    activeTab === "roi" 
+                      ? "bg-primary/20 text-primary shadow-gold" 
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <TrendingUp size={18} />
+                  <span className="font-medium">ROI Calculator</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Tab Content */}
+            <div className="p-6">
+              <AnimatePresence mode="wait">
+                {activeTab === "mortgage" && (
+                  <motion.div
+                    key="mortgage"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.3 }}
+                    className="grid md:grid-cols-2 gap-8"
+                  >
+                    {/* Mortgage Inputs */}
+                    <div className="space-y-6">
+                      <h3 className="text-xl font-semibold text-foreground flex items-center space-x-2">
+                        <Building className="w-5 h-5 text-primary" />
+                        <span>Property Details</span>
+                      </h3>
+                      
+                      <div className="space-y-4">
+                        <div>
+                          <Label className="text-sm font-medium text-muted-foreground">Property Price</Label>
+                          <Input
+                            type="number"
+                            value={mortgageData.price}
+                            onChange={(e) => setMortgageData({...mortgageData, price: Number(e.target.value)})}
+                            className="mt-1 glass-subtle border-white/20 text-foreground"
+                          />
+                        </div>
+                        
+                        <div>
+                          <Label className="text-sm font-medium text-muted-foreground">Down Payment (%)</Label>
+                          <Input
+                            type="number"
+                            value={mortgageData.downPayment}
+                            onChange={(e) => setMortgageData({...mortgageData, downPayment: Number(e.target.value)})}
+                            className="mt-1 glass-subtle border-white/20 text-foreground"
+                          />
+                        </div>
+                        
+                        <div>
+                          <Label className="text-sm font-medium text-muted-foreground">Interest Rate (%)</Label>
+                          <Input
+                            type="number"
+                            step="0.1"
+                            value={mortgageData.interestRate}
+                            onChange={(e) => setMortgageData({...mortgageData, interestRate: Number(e.target.value)})}
+                            className="mt-1 glass-subtle border-white/20 text-foreground"
+                          />
+                        </div>
+                        
+                        <div>
+                          <Label className="text-sm font-medium text-muted-foreground">Loan Term (Years)</Label>
+                          <Input
+                            type="number"
+                            value={mortgageData.loanTerm}
+                            onChange={(e) => setMortgageData({...mortgageData, loanTerm: Number(e.target.value)})}
+                            className="mt-1 glass-subtle border-white/20 text-foreground"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Mortgage Results */}
+                    <div className="space-y-6">
+                      <h3 className="text-xl font-semibold text-foreground flex items-center space-x-2">
+                        <PieChart className="w-5 h-5 text-primary" />
+                        <span>Monthly Breakdown</span>
+                      </h3>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <Card className="glass-subtle border-white/10">
+                          <CardHeader className="pb-3">
+                            <CardTitle className="text-sm text-muted-foreground">Monthly Payment</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="text-2xl font-bold text-primary">
+                              {formatCurrency(mortgageResults.monthlyPayment)}
+                            </div>
+                          </CardContent>
+                        </Card>
+                        
+                        <Card className="glass-subtle border-white/10">
+                          <CardHeader className="pb-3">
+                            <CardTitle className="text-sm text-muted-foreground">Down Payment</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="text-2xl font-bold text-foreground">
+                              {formatCurrency(mortgageResults.downPaymentAmount)}
+                            </div>
+                          </CardContent>
+                        </Card>
+                        
+                        <Card className="glass-subtle border-white/10">
+                          <CardHeader className="pb-3">
+                            <CardTitle className="text-sm text-muted-foreground">Total Interest</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="text-2xl font-bold text-accent">
+                              {formatCurrency(mortgageResults.totalInterest)}
+                            </div>
+                          </CardContent>
+                        </Card>
+                        
+                        <Card className="glass-subtle border-white/10">
+                          <CardHeader className="pb-3">
+                            <CardTitle className="text-sm text-muted-foreground">Total Payment</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="text-2xl font-bold text-foreground">
+                              {formatCurrency(mortgageResults.totalPayment)}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {activeTab === "roi" && (
+                  <motion.div
+                    key="roi"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.3 }}
+                    className="grid md:grid-cols-2 gap-8"
+                  >
+                    {/* ROI Inputs */}
+                    <div className="space-y-6">
+                      <h3 className="text-xl font-semibold text-foreground flex items-center space-x-2">
+                        <DollarSign className="w-5 h-5 text-primary" />
+                        <span>Investment Details</span>
+                      </h3>
+                      
+                      <div className="space-y-4">
+                        <div>
+                          <Label className="text-sm font-medium text-muted-foreground">Initial Investment</Label>
+                          <Input
+                            type="number"
+                            value={roiData.investment}
+                            onChange={(e) => setROIData({...roiData, investment: Number(e.target.value)})}
+                            className="mt-1 glass-subtle border-white/20 text-foreground"
+                          />
+                        </div>
+                        
+                        <div>
+                          <Label className="text-sm font-medium text-muted-foreground">Annual Rental Income</Label>
+                          <Input
+                            type="number"
+                            value={roiData.annualRent}
+                            onChange={(e) => setROIData({...roiData, annualRent: Number(e.target.value)})}
+                            className="mt-1 glass-subtle border-white/20 text-foreground"
+                          />
+                        </div>
+                        
+                        <div>
+                          <Label className="text-sm font-medium text-muted-foreground">Annual Appreciation (%)</Label>
+                          <Input
+                            type="number"
+                            step="0.1"
+                            value={roiData.appreciation}
+                            onChange={(e) => setROIData({...roiData, appreciation: Number(e.target.value)})}
+                            className="mt-1 glass-subtle border-white/20 text-foreground"
+                          />
+                        </div>
+                        
+                        <div>
+                          <Label className="text-sm font-medium text-muted-foreground">Annual Expenses</Label>
+                          <Input
+                            type="number"
+                            value={roiData.expenses}
+                            onChange={(e) => setROIData({...roiData, expenses: Number(e.target.value)})}
+                            className="mt-1 glass-subtle border-white/20 text-foreground"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* ROI Results */}
+                    <div className="space-y-6">
+                      <h3 className="text-xl font-semibold text-foreground flex items-center space-x-2">
+                        <TrendingUp className="w-5 h-5 text-primary" />
+                        <span>Annual Returns</span>
+                      </h3>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <Card className="glass-subtle border-white/10">
+                          <CardHeader className="pb-3">
+                            <CardTitle className="text-sm text-muted-foreground">Net Rental Income</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="text-2xl font-bold text-primary">
+                              {formatCurrency(roiResults.netRent)}
+                            </div>
+                          </CardContent>
+                        </Card>
+                        
+                        <Card className="glass-subtle border-white/10">
+                          <CardHeader className="pb-3">
+                            <CardTitle className="text-sm text-muted-foreground">Appreciation</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="text-2xl font-bold text-accent">
+                              {formatCurrency(roiResults.appreciation)}
+                            </div>
+                          </CardContent>
+                        </Card>
+                        
+                        <Card className="glass-subtle border-white/10">
+                          <CardHeader className="pb-3">
+                            <CardTitle className="text-sm text-muted-foreground">Total Return</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="text-2xl font-bold text-foreground">
+                              {formatCurrency(roiResults.totalReturn)}
+                            </div>
+                          </CardContent>
+                        </Card>
+                        
+                        <Card className="glass-subtle border-white/10">
+                          <CardHeader className="pb-3">
+                            <CardTitle className="text-sm text-muted-foreground">ROI</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="text-3xl font-bold text-luxury">
+                              {roiResults.roi}%
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+};
+
+export default FloatingTools;
